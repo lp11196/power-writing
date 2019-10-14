@@ -1,0 +1,134 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    .vertical-align {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .vertical-align>* {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 300px;
+      line-height: 2em;
+    }
+
+    #poll {
+      text-align: center;
+    }
+
+    #poll .panel-body .btn {
+      margin: 0 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="vertical-align">
+    <div class="panel panel-default" id="poll" style="display:none;">
+      <div class="panel-heading">
+        <h3 class="panel-title">Panel title</h3>
+      </div>
+      <div class="panel-body">
+      </div>
+    </div>
+    <div class="alert" role="alert" id="poll_result" style="display:none;">
+      <strong>Heads up!</strong> This alert needs your attention, but it's not super important.
+    </div>
+  </div>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  <script>
+    var r = [
+      "당신은 이미 글쓰기 달인! 글 쓰는 데 전혀 어려움이 없으시군요.<br>과제를 미리 해 오시면 오히려 수업 시간이 지루할 수 있으니 간단하게 어떤 주제로 글을 쓸 것인지만 생각해 보세요.", // yellow
+      "완벽주의자인 당신! 혹시 처음부터 완벽한 문장을 쓰려고 했나요?<br>처음부터 완벽한 문장을 쓰기는 어렵습니다. 우선은 생각나는 대로 쓰고, 나중에 문장을 고치도록 해 보세요. <br> 미리 초안을 써 오시기를 권장합니다. 실습 시간에는 문장을 다듬는 데 집중해 봅시다!",  // red
+      "이미 글을 쓰기 시작했으면서도 갈팡질팡하는 당신!<br>글의 주제, 독자, 개요부터 곰곰이 생각해 보세요.", // blue
+      "일필휘지로 단숨에 글을 써버리는 당신!<br>빠르게 쓰는 것만이 능사는 아닙니다. 문장 고쳐 쓰는 법을 익히고 꾸준히 연습하세요. <br>초안을 미리 써오시면 문장 고치는 훈련에 좀 더 집중할 수 있습니다.", // red
+      "역지사지! 내가 하고 싶은 말만 쓰고 있는 것 아닐까요? <br> 독자가 무엇을 궁금해할지 다시 생각해 보세요." // blue
+    ];
+
+    var questions = [
+      ["글을 시작하기 어렵다."],
+      [
+        "일단 떠오르는 대로 쓰는 편이다.",
+        "글 쓰는 데 너무 많은 시간이 걸린다."],
+      [
+        "글의 구조를 짜는 게 어렵다.",
+        "글을 쓰다 보면 처음에 계획했던 내용과 달라진다.",
+        "글이 너무 길어진다."],
+      [
+        "생각을 문장으로 표현하기 어렵다.",
+        "글을 쓰고 난 뒤에 보면 틀린 문장과 오탈자가 너무 많다.",
+        "몇 줄 쓰고 나면 할 말이 없어진다.",
+        "나는 잘 쓴 것 같은데, 사람들이 내가 쓴 글이 어렵다고 한다."
+      ]
+    ];
+
+    var pollIndexs = [
+      [{ 'y': { index: 1 }, 'n': { index: 0 } }],
+      [
+        { 'y': { index: 1 }, 'n': { index: 0 } },
+        { 'y': { index: 0 }, 'n': { index: 2 } }
+      ],
+      [
+        { 'y': { result: r[2], class: 'info' }, 'n': { index: 0 } },
+        { 'y': { result: r[2], class: 'info' }, 'n': { index: 1 } },
+        { 'y': { index: 3 }, 'n': { index: 2 } },
+      ],
+      [
+        { 'y': { result: r[1], class: 'danger' }, 'n': { result: r[0], class: 'warning' } },
+        { 'y': { result: r[3], class: 'danger' }, 'n': { result: r[0], class: 'warning' } },
+        { 'y': { result: r[2], class: 'info' }, 'n': { result: r[1], class: 'danger' } },
+        { 'y': { result: r[4], class: 'info' }, 'n': { result: r[3], class: 'danger' } }
+      ]
+    ];
+
+    function createQuestions(question, poll, index) {
+      var $el = $("#poll");
+      var $result = $("#poll_result");
+      $el.show();
+      $result.hide();
+      if (poll) {
+        $el.find(".panel-title").html(question);
+        $el.find(".panel-body").empty();
+        ['y', 'n'].forEach(function (v, i) {
+          var resultTemplate = '<button type="button" class="btn btn-sm btn-{{CLASS}}" onclick="createResult(\'{{POLL_RESULT}}\', \'{{POLL_CLASS}}\');">{{TEXT}}</button>';
+          var nextTemplate = '<button type="button" class="btn btn-sm btn-{{CLASS}}" onclick="createQuestions(questions[{{NEXT_INDEX}}][{{POLL_INDEX}}], pollIndexs[{{NEXT_INDEX}}][{{POLL_INDEX}}], {{NEXT_INDEX}});">{{TEXT}}</button>';
+          var template = poll[v].result ? resultTemplate : nextTemplate;
+          $el.find(".panel-body").append($(
+            template
+              .replace(/\{\{INDEX\}\}/g, index)
+              .replace(/\{\{VALUE\}\}/g, v)
+              .replace(/\{\{NEXT_INDEX\}\}/g, index + 1)
+              .replace(/\{\{POLL_RESULT\}\}/g, poll[v].result)
+              .replace(/\{\{POLL_CLASS\}\}/g, poll[v].class)
+              .replace(/\{\{POLL_INDEX\}\}/g, poll[v].index)
+              .replace(/\{\{CLASS\}\}/g, v === 'y' ? "primary" : "default")
+              .replace(/\{\{TEXT\}\}/g, v === 'y' ? "예" : "아니오")
+          ));
+        });
+      }
+    }
+
+    function createResult(result, className) {
+      var $el = $("#poll");
+      var $result = $("#poll_result");
+      $el.hide();
+      $result.show();
+      $result.addClass("alert-" + className).html($("<strong>").html(result));
+    }
+
+    createQuestions(questions[0][0], pollIndexs[0][0], 0);
+  </script>
+</body>
+
+</html>
